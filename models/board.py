@@ -1,5 +1,33 @@
+import functools
 from collections import defaultdict
-from typing import Any
+from typing import Any, Literal
+
+from core.custom_errors import OutOfBoundariesError
+
+
+def check_out_of_bounds(func):
+    @functools.wraps(func)
+    def wrapper(self, i: int, j: int, entity: Any, *args, **kwargs):
+        out_row = i > self.n_rows or i < 0
+        out_col = j > self.n_cols or j < 0
+        if out_row or out_col:
+            if out_row and out_col:
+                error_type = "both"
+            elif out_row:
+                error_type = "row"
+            else:
+                error_type = "column"
+
+            raise OutOfBoundariesError(
+                obj_name="number" if isinstance(entity, int) else "mark",
+                pos_error_type=error_type,
+                n_rows=self.n_rows,
+                n_cols=self.n_cols,
+            )
+
+        return func(self, i, j, entity, *args, **kwargs)
+
+    return wrapper
 
 
 class SudokuBoard:
@@ -81,3 +109,8 @@ class SudokuBoard:
             "cols": col_conflicts,
             "regions": region_conflicts,
         }
+
+    @check_out_of_bounds
+    def add_number(
+        self, i: int, j: int, number: Literal[1, 2, 3, 4, 5, 6, 7, 8, 9]
+    ) -> None: ...
