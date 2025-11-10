@@ -113,4 +113,17 @@ class SudokuBoard:
     @check_out_of_bounds
     def add_number(
         self, i: int, j: int, number: Literal[1, 2, 3, 4, 5, 6, 7, 8, 9]
-    ) -> None: ...
+    ) -> None:
+        self.board[i][j] = number
+
+    @check_out_of_bounds
+    def remove_number(self, i: int, j: int) -> None:
+        self.board[i][j] = None
+
+    @check_out_of_bounds
+    def add_mark(self, i: int, j: int) -> None:
+        self.board[i][j] = -1
+
+    @check_out_of_bounds
+    def remove_mark(self, i: int, j: int) -> None:
+        self.board[i][j] = None
