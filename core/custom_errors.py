@@ -4,7 +4,7 @@ from typing import Literal
 class OutOfBoundariesError(Exception):
     def __init__(
         self,
-        obj_name: Literal["number", "mark", "annotation"],
+        obj_name: Literal["number", "mark"],
         pos_error_type: Literal["row", "column", "both"],
         n_rows: int,
         n_cols: int,
@@ -21,3 +21,27 @@ class OutOfBoundariesError(Exception):
             n_cols=n_cols,
         )
         super().__init__(message)
+
+
+class CellNotAvailableError(Exception):
+    def __init__(
+        self,
+        i: int,
+        j: int,
+        message: str = "You cannot modify cell ({i},{j}) because is a fixed number",
+        *args: object,
+    ) -> None:
+        message.format(i=i, j=j)
+        super().__init__(message, *args)
+
+
+class OutOfLimitsError(Exception):
+    def __init__(
+        self,
+        number: int,
+        max_number: int,
+        message: str = "Number: {number} out of range 0 < number < {max_number}",
+        *args: object,
+    ) -> None:
+        message.format(number=number, max_number=max_number)
+        super().__init__(message, *args)

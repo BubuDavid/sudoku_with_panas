@@ -1,3 +1,7 @@
-from .custom_types import ConflictDict, CoordNum
+from .custom_errors import (
+    CellNotAvailableError,
+    OutOfBoundariesError,
+    OutOfLimitsError,
+)
 
-__all__ = ["ConflictDict", "CoordNum"]
+__all__ = ["CellNotAvailableError", "OutOfBoundariesError", "OutOfLimitsError"]

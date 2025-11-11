@@ -1,8 +1,8 @@
 import functools
 from collections import defaultdict
-from typing import Any, Literal
+from typing import Any, cast
 
-from core.custom_errors import OutOfBoundariesError
+from core import CellNotAvailableError, OutOfBoundariesError, OutOfLimitsError
 
 
 def check_out_of_bounds(func):
@@ -25,6 +25,15 @@ def check_out_of_bounds(func):
                 n_cols=self.n_cols,
             )
 
+        if not self.available_cells[i][j]:
+            raise CellNotAvailableError(i, j)
+
+        if isinstance(entity, int) and (
+            entity > (max_number := max(self.n_cols, self.n_rows))
+            or entity <= 0
+        ):
+            raise OutOfLimitsError(entity, max_number)
+
         return func(self, i, j, entity, *args, **kwargs)
 
     return wrapper
@@ -41,7 +50,9 @@ class SudokuBoard:
     ) -> None:
         self.n_cols = n_cols
         self.n_rows = n_rows
-        self.board = []
+        self.board: list[list[int | None]] = []
+        self.mark_board: list[list[list[bool]]] = []
+        self.available_cells: list[list[bool]] = []
         for i in range(self.n_rows):
             init_row = []
             for j in range(self.n_cols):
@@ -50,6 +61,10 @@ class SudokuBoard:
                 else:
                     init_row.append(board[i][j])
             self.board.append(init_row)
+            self.available_cells.append(list(map(bool, init_row)))
+            self.mark_board.append(
+                [[False for _ in range(n_cols)] for _ in init_row]
+            )
 
         self.n_cols_group = n_cols_group
         self.n_rows_group = n_rows_group
@@ -94,11 +109,10 @@ class SudokuBoard:
         for i in range(self.n_rows):
             for j in range(self.n_cols):
                 if self.board[i][j] is not None:
-                    rows[i][self.board[i][j]].add(j)
-                    cols[j][self.board[i][j]].add(i)
-                    regions[self.region_mapping(i, j)][self.board[i][j]].add(
-                        (i, j)
-                    )
+                    current = cast(int, self.board[i][j])  # Pyright bug?
+                    rows[i][current].add(j)
+                    cols[j][current].add(i)
+                    regions[self.region_mapping(i, j)][current].add((i, j))
 
         row_conflicts = self._filter_validations(rows)
         col_conflicts = self._filter_validations(cols)
@@ -111,9 +125,11 @@ class SudokuBoard:
         }
 
     @check_out_of_bounds
-    def add_number(
-        self, i: int, j: int, number: Literal[1, 2, 3, 4, 5, 6, 7, 8, 9]
-    ) -> None:
+    def get(self, i: int, j: int) -> int | None:
+        return self.board[i][j]
+
+    @check_out_of_bounds
+    def add_number(self, i: int, j: int, number: int) -> None:
         self.board[i][j] = number
 
     @check_out_of_bounds
@@ -121,9 +137,17 @@ class SudokuBoard:
         self.board[i][j] = None
 
     @check_out_of_bounds
-    def add_mark(self, i: int, j: int) -> None:
-        self.board[i][j] = -1
+    def toggle_mark(self, i: int, j: int, number: int) -> int | None:
+        self.mark_board[i][j][number - 1] = not self.mark_board[i][j][
+            number - 1
+        ]
 
-    @check_out_of_bounds
-    def remove_mark(self, i: int, j: int) -> None:
-        self.board[i][j] = None
+        return number if self.mark_board[i][j][number - 1] else None
+
+    def is_solved(self):
+        validation = self.validate_board()
+        has_no_conflicts = not any(
+            [validation["rows"], validation["cols"], validation["regions"]]
+        )
+        all_numbers = all([bool(cell) for row in self.board for cell in row])
+        return has_no_conflicts and all_numbers
