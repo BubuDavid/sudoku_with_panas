@@ -31,7 +31,7 @@ class CellNotAvailableError(Exception):
         message: str = "You cannot modify cell ({i},{j}) because is a fixed number",
         *args: object,
     ) -> None:
-        message.format(i=i, j=j)
+        message = message.format(i=i, j=j)
         super().__init__(message, *args)
 
 
@@ -43,5 +43,5 @@ class OutOfLimitsError(Exception):
         message: str = "Number: {number} out of range 0 < number < {max_number}",
         *args: object,
     ) -> None:
-        message.format(number=number, max_number=max_number)
+        message = message.format(number=number, max_number=max_number)
         super().__init__(message, *args)

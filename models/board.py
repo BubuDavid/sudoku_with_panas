@@ -7,9 +7,9 @@ from core import CellNotAvailableError, OutOfBoundariesError, OutOfLimitsError
 
 def check_out_of_bounds(func):
     @functools.wraps(func)
-    def wrapper(self, i: int, j: int, entity: Any, *args, **kwargs):
-        out_row = i > self.n_rows or i < 0
-        out_col = j > self.n_cols or j < 0
+    def wrapper(self, i: int, j: int, entity: Any = None, *args, **kwargs):
+        out_row = i >= self.n_rows or i < 0
+        out_col = j >= self.n_cols or j < 0
         if out_row or out_col:
             if out_row and out_col:
                 error_type = "both"
@@ -25,7 +25,8 @@ def check_out_of_bounds(func):
                 n_cols=self.n_cols,
             )
 
-        if not self.available_cells[i][j]:
+        # Only check availability and limits if entity is provided
+        if not self.available_cells[i][j] and entity is not None:
             raise CellNotAvailableError(i, j)
 
         if isinstance(entity, int) and (
@@ -34,7 +35,11 @@ def check_out_of_bounds(func):
         ):
             raise OutOfLimitsError(entity, max_number)
 
-        return func(self, i, j, entity, *args, **kwargs)
+        # Call function with or without entity based on whether it was provided
+        if entity is not None:
+            return func(self, i, j, entity, *args, **kwargs)
+        else:
+            return func(self, i, j, *args, **kwargs)
 
     return wrapper
 
@@ -61,7 +66,7 @@ class SudokuBoard:
                 else:
                     init_row.append(board[i][j])
             self.board.append(init_row)
-            self.available_cells.append(list(map(bool, init_row)))
+            self.available_cells.append([cell is None for cell in init_row])
             self.mark_board.append(
                 [[False for _ in range(n_cols)] for _ in init_row]
             )

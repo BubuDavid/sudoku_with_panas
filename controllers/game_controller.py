@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from pathlib import Path
 from typing import cast
 
@@ -21,7 +22,7 @@ class GameController:
             n_rows_group=n_rows_group,
             board=board,
         )
-        self.original_board = self.board
+        self.original_board = deepcopy(self.board)
         self.move_history: list[tuple[str, tuple[int, int, int]]] = []
 
     @classmethod
@@ -76,7 +77,7 @@ class GameController:
 
     def reset_board(self):
         self.move_history = []
-        self.board = self.original_board
+        self.board = deepcopy(self.original_board)
 
     def get_move_count(self):
         return len(self.move_history)
