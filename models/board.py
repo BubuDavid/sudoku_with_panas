@@ -157,16 +157,37 @@ class SudokuBoard:
         all_numbers = all([bool(cell) for row in self.board for cell in row])
         return has_no_conflicts and all_numbers
 
-    def display(self) -> str:
+    def display(self, show_conflicts: bool = True) -> str:
         lines = []
         cell_width = len(str(max(self.n_rows, self.n_cols)))
+
+        conflict_positions: set[tuple[int, int]] = set()
+        if show_conflicts:
+            conflicts = self.validate_board()
+
+            for row_id, numbers in conflicts["rows"].items():
+                for _number, cols in numbers.items():
+                    for col in cols:
+                        conflict_positions.add((row_id, col))
+
+            for col_id, numbers in conflicts["cols"].items():
+                for _number, rows in numbers.items():
+                    for row in rows:
+                        conflict_positions.add((row, col_id))
+
+            for _region_id, numbers in conflicts["regions"].items():
+                for _number, positions in numbers.items():
+                    for pos in positions:
+                        conflict_positions.add(pos)
 
         for i in range(self.n_rows):
             if i == 0:
                 line = "┏"
                 for j in range(self.n_cols):
                     line += "━" * (cell_width + 2)
-                    if (j + 1) % self.n_cols_group == 0 and j < self.n_cols - 1:
+                    if (
+                        j + 1
+                    ) % self.n_cols_group == 0 and j < self.n_cols - 1:
                         line += "┳"
                     elif j < self.n_cols - 1:
                         line += "┯"
@@ -176,7 +197,9 @@ class SudokuBoard:
                 line = "┣"
                 for j in range(self.n_cols):
                     line += "━" * (cell_width + 2)
-                    if (j + 1) % self.n_cols_group == 0 and j < self.n_cols - 1:
+                    if (
+                        j + 1
+                    ) % self.n_cols_group == 0 and j < self.n_cols - 1:
                         line += "╋"
                     elif j < self.n_cols - 1:
                         line += "┿"
@@ -186,7 +209,9 @@ class SudokuBoard:
                 line = "┠"
                 for j in range(self.n_cols):
                     line += "─" * (cell_width + 2)
-                    if (j + 1) % self.n_cols_group == 0 and j < self.n_cols - 1:
+                    if (
+                        j + 1
+                    ) % self.n_cols_group == 0 and j < self.n_cols - 1:
                         line += "╂"
                     elif j < self.n_cols - 1:
                         line += "┼"
@@ -204,7 +229,10 @@ class SudokuBoard:
                 if cell is None:
                     row_str += " " * (cell_width + 2)
                 else:
-                    row_str += f" {str(cell).rjust(cell_width)} "
+                    cell_str = str(cell).rjust(cell_width)
+                    if (i, j) in conflict_positions:
+                        cell_str = f"\033[91m{cell_str}\033[0m"
+                    row_str += f" {cell_str} "
 
             row_str += "┃"
             lines.append(row_str)
