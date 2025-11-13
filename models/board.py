@@ -156,3 +156,67 @@ class SudokuBoard:
         )
         all_numbers = all([bool(cell) for row in self.board for cell in row])
         return has_no_conflicts and all_numbers
+
+    def display(self) -> str:
+        lines = []
+        cell_width = len(str(max(self.n_rows, self.n_cols)))
+
+        for i in range(self.n_rows):
+            if i == 0:
+                line = "┏"
+                for j in range(self.n_cols):
+                    line += "━" * (cell_width + 2)
+                    if (j + 1) % self.n_cols_group == 0 and j < self.n_cols - 1:
+                        line += "┳"
+                    elif j < self.n_cols - 1:
+                        line += "┯"
+                line += "┓"
+                lines.append(line)
+            elif i % self.n_rows_group == 0:
+                line = "┣"
+                for j in range(self.n_cols):
+                    line += "━" * (cell_width + 2)
+                    if (j + 1) % self.n_cols_group == 0 and j < self.n_cols - 1:
+                        line += "╋"
+                    elif j < self.n_cols - 1:
+                        line += "┿"
+                line += "┫"
+                lines.append(line)
+            else:
+                line = "┠"
+                for j in range(self.n_cols):
+                    line += "─" * (cell_width + 2)
+                    if (j + 1) % self.n_cols_group == 0 and j < self.n_cols - 1:
+                        line += "╂"
+                    elif j < self.n_cols - 1:
+                        line += "┼"
+                line += "┨"
+                lines.append(line)
+
+            row_str = ""
+            for j in range(self.n_cols):
+                if j % self.n_cols_group == 0:
+                    row_str += "┃"
+                else:
+                    row_str += "│"
+
+                cell = self.board[i][j]
+                if cell is None:
+                    row_str += " " * (cell_width + 2)
+                else:
+                    row_str += f" {str(cell).rjust(cell_width)} "
+
+            row_str += "┃"
+            lines.append(row_str)
+
+        line = "┗"
+        for j in range(self.n_cols):
+            line += "━" * (cell_width + 2)
+            if (j + 1) % self.n_cols_group == 0 and j < self.n_cols - 1:
+                line += "┻"
+            elif j < self.n_cols - 1:
+                line += "┷"
+        line += "┛"
+        lines.append(line)
+
+        return "\n".join(lines)
