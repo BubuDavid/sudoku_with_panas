@@ -1,6 +1,89 @@
 from typing import Literal
 
 from controllers import GameController
+from core import CellNotAvailableError, OutOfBoundariesError, OutOfLimitsError
+
+
+def play_game(gc: GameController):
+    """Interactive gameplay loop"""
+    print("\n=== Sudoku Game ===")
+    print("Commands:")
+    print("  <row> <col> <num>  - Add number to cell (e.g., '0 0 5')")
+    print("  r <row> <col>      - Remove number from cell")
+    print("  m <row> <col> <num> - Toggle mark in cell")
+    print("  s                  - Show conflicts")
+    print("  reset              - Reset board to start")
+    print("  quit               - Exit game")
+    print()
+
+    while True:
+        gc.display_cli()
+
+        if gc.is_solved():
+            print("\n🎉 Congratulations! You solved the puzzle!")
+            print(f"Total moves: {gc.get_move_count()}")
+            break
+
+        print(f"\nMoves: {gc.get_move_count()}")
+        user_input = input("Enter command: ").strip().lower()
+
+        if not user_input:
+            continue
+
+        if user_input == "quit":
+            print("Thanks for playing!")
+            break
+
+        if user_input == "reset":
+            gc.reset_board()
+            print("Board reset!")
+            continue
+
+        if user_input == "s":
+            conflicts = gc.get_conflicts()
+            if any(conflicts.values()):
+                print("\nConflicts found:")
+                if conflicts["rows"]:
+                    print(f"  Rows: {conflicts['rows']}")
+                if conflicts["cols"]:
+                    print(f"  Cols: {conflicts['cols']}")
+                if conflicts["regions"]:
+                    print(f"  Regions: {conflicts['regions']}")
+            else:
+                print("No conflicts!")
+            continue
+
+        try:
+            parts = user_input.split()
+
+            if len(parts) == 3 and parts[0] not in {"m", "r"}:
+                # Add number: <row> <col> <num>
+                row, col, num = map(int, parts)
+                gc.toggle_number(row, col, num)
+
+            elif len(parts) == 3 and parts[0] == "r":
+                # Remove number: r <row> <col>
+                row, col = map(int, parts[1:])
+                gc.board.remove_number(row, col)
+
+            elif len(parts) == 4 and parts[0] == "m":
+                # Toggle mark: m <row> <col> <num>
+                row, col, num = map(int, parts[1:])
+                gc.toggle_mark(row, col, num)
+
+            else:
+                print("Invalid command format")
+
+        except ValueError:
+            print("Invalid input. Please use numbers.")
+        except (
+            OutOfBoundariesError,
+            CellNotAvailableError,
+            OutOfLimitsError,
+        ) as e:
+            print(f"Error: {e}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
 
 
 def main(
@@ -9,7 +92,7 @@ def main(
 ):
     gc = GameController.load_board(f"./premade_boards/{board_type}.json")
     gc.randomize(difficulty)
-    gc.display_cli()
+    play_game(gc)
 
 
 if __name__ == "__main__":

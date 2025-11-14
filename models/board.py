@@ -256,3 +256,4 @@ class SudokuBoard:
                 self.board[i][j] = (
                     self.board[i][j] if random.random() >= value else None
                 )
+                self.available_cells[i][j] = not (bool(self.board[i][j]))
