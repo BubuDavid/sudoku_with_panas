@@ -1,7 +1,7 @@
 import json
 from copy import deepcopy
 from pathlib import Path
-from typing import cast
+from typing import Literal, cast
 
 from models import BoardExpression, SudokuBoard
 
@@ -47,6 +47,17 @@ class GameController:
         }
 
         return cls(**board_config)
+
+    def randomize(
+        self, difficulty: Literal["easy", "medium", "hard", "gifted"]
+    ) -> None:
+        value = {"easy": 0.5, "medium": 0.6, "hard": 0.75, "gifted": 0.2}[
+            difficulty
+        ]
+        self.board.randomize(value)
+
+    def display_cli(self):
+        print(self.board.display())
 
     def toggle_number(self, i: int, j: int, number: int) -> int | None:
         if self.board.get(i, j) == number:

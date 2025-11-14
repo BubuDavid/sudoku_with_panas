@@ -1,4 +1,5 @@
 import functools
+import random
 from collections import defaultdict
 from typing import Any, cast
 
@@ -248,3 +249,10 @@ class SudokuBoard:
         lines.append(line)
 
         return "\n".join(lines)
+
+    def randomize(self, value: float = 0.4):
+        for i in range(self.n_rows):
+            for j in range(self.n_cols):
+                self.board[i][j] = (
+                    self.board[i][j] if random.random() >= value else None
+                )
