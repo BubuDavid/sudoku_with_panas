@@ -233,6 +233,8 @@ class SudokuBoard:
                     cell_str = str(cell).rjust(cell_width)
                     if (i, j) in conflict_positions:
                         cell_str = f"\033[91m{cell_str}\033[0m"
+                    elif self.available_cells[i][j]:
+                        cell_str = f"\033[94m{cell_str}\033[0m"
                     row_str += f" {cell_str} "
 
             row_str += "┃"

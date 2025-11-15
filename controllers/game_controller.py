@@ -23,7 +23,14 @@ class GameController:
             board=board,
         )
         self.original_board = deepcopy(self.board)
-        self.move_history: list[tuple[str, tuple[int, int, int]]] = []
+        self.move_history: list[
+            tuple[
+                Literal[
+                    "remove_number", "add_number", "add_mark", "remove_mark"
+                ],
+                tuple[int, int, int],
+            ]
+        ] = []
 
     @classmethod
     def load_board(cls, board_config_or_path: str | Path | BoardExpression):
@@ -55,6 +62,7 @@ class GameController:
             difficulty
         ]
         self.board.randomize(value)
+        self.original_board = deepcopy(self.board)
 
     def display_cli(self):
         print(self.board.display())
@@ -68,6 +76,13 @@ class GameController:
         self.board.add_number(i, j, number)
         self.move_history.append(("add_number", (i, j, number)))
         return self.board.get(i, j)
+
+    def remove_number(self, i: int, j: int) -> None:
+        number = self.board.get(i, j)
+        if number is None:
+            return
+        self.board.remove_number(i, j)
+        self.move_history.append(("remove_number", (i, j, number)))
 
     def toggle_mark(self, i: int, j: int, number: int) -> int | None:
         result = self.board.toggle_mark(i, j, number)
@@ -92,3 +107,11 @@ class GameController:
 
     def get_move_count(self):
         return len(self.move_history)
+
+    def undo_move(self):
+        move = self.move_history.pop()
+        move_type, (i, j, number) = move
+        if move_type in {"add_number", "remove_number"}:
+            self.toggle_number(i, j, number)
+        if move_type in {"add_mark", "remove_mark"}:
+            self.toggle_mark(i, j, number)

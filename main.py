@@ -8,17 +8,15 @@ def play_game(gc: GameController):
     """Interactive gameplay loop"""
     print("\n=== Sudoku Game ===")
     print("Commands:")
-    print("  <row> <col> <num>  - Add number to cell (e.g., '0 0 5')")
-    print("  r <row> <col>      - Remove number from cell")
-    print("  m <row> <col> <num> - Toggle mark in cell")
-    print("  s                  - Show conflicts")
-    print("  reset              - Reset board to start")
-    print("  quit               - Exit game")
+    print("  <row> <col> <num>   - Add number to cell (e.g., '0 0 5')")
+    print("  r <row> <col>       - Remove number from cell")
+    print("  u                   - Undo movement")
+    print("  reset               - Reset board to start")
+    print("  quit                - Exit game")
     print()
 
     while True:
         gc.display_cli()
-
         if gc.is_solved():
             print("\n🎉 Congratulations! You solved the puzzle!")
             print(f"Total moves: {gc.get_move_count()}")
@@ -30,7 +28,7 @@ def play_game(gc: GameController):
         if not user_input:
             continue
 
-        if user_input == "quit":
+        if user_input in {"quit", "exit", "exit()", "q", ":q"}:
             print("Thanks for playing!")
             break
 
@@ -39,24 +37,9 @@ def play_game(gc: GameController):
             print("Board reset!")
             continue
 
-        if user_input == "s":
-            conflicts = gc.get_conflicts()
-            if any(conflicts.values()):
-                print("\nConflicts found:")
-                if conflicts["rows"]:
-                    print(f"  Rows: {conflicts['rows']}")
-                if conflicts["cols"]:
-                    print(f"  Cols: {conflicts['cols']}")
-                if conflicts["regions"]:
-                    print(f"  Regions: {conflicts['regions']}")
-            else:
-                print("No conflicts!")
-            continue
-
         try:
             parts = user_input.split()
-
-            if len(parts) == 3 and parts[0] not in {"m", "r"}:
+            if len(parts) == 3 and parts[0] not in {"u", "r"}:
                 # Add number: <row> <col> <num>
                 row, col, num = map(int, parts)
                 gc.toggle_number(row, col, num)
@@ -64,13 +47,9 @@ def play_game(gc: GameController):
             elif len(parts) == 3 and parts[0] == "r":
                 # Remove number: r <row> <col>
                 row, col = map(int, parts[1:])
-                gc.board.remove_number(row, col)
-
-            elif len(parts) == 4 and parts[0] == "m":
-                # Toggle mark: m <row> <col> <num>
-                row, col, num = map(int, parts[1:])
-                gc.toggle_mark(row, col, num)
-
+                gc.remove_number(row, col)
+            elif len(parts) == 1 and parts[0] == "u":
+                gc.undo_move()
             else:
                 print("Invalid command format")
 
